@@ -3,7 +3,7 @@ variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
 
-variable locals {
+variable "locals" {
   default = {
     Assignment = "CCGC 5501 Cloud Security Lab 6"
     Name = "Albin.Polakkattil"
