@@ -1,5 +1,5 @@
-resource "aws_iam_role" "example_role" {
-  name = "examplerole"
+resource "aws_iam_role" "iam_role" {
+  name = "iamrole"
 
   assume_role_policy = <<EOF
 {
@@ -17,29 +17,29 @@ resource "aws_iam_role" "example_role" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "example_attachment" {
-  role       = aws_iam_role.example_role.name
+resource "aws_iam_role_policy_attachment" "policy_attachment" {
+  role       = aws_iam_role.iam_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 }
 
-resource "aws_iam_instance_profile" "example_profile" {
-  name = "example_profile"
-  role = aws_iam_role.example_role.name
+resource "aws_iam_instance_profile" "iam_profile" {
+  name = "iam_profile"
+  role = aws_iam_role.iam_role.name
 }
 
-resource "aws_instance" "example_instance" {
+resource "aws_instance" "ec2_instance" {
   ami           = "ami-06ca3ca175f37dd66"
   instance_type = "t2.micro"
   
-  iam_instance_profile = aws_iam_instance_profile.example_profile.name
+  iam_instance_profile = aws_iam_instance_profile.iam_profile.name
 
   tags = {
-    Name = "exampleinstance"
+    Name = "ec2instance"
   }
 }
 
-resource "aws_s3_bucket_policy" "example_bucket_policy" {
-  bucket = "example-bucket"
+resource "aws_s3_bucket_policy" "s3_bucket_policy" {
+  bucket = "s3-policy-bucket"
 
   policy = jsonencode({
     "Version": "2012-10-17",
@@ -47,15 +47,15 @@ resource "aws_s3_bucket_policy" "example_bucket_policy" {
       {
         "Effect": "Allow",
         "Principal": {
-          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.example_role.name}"
+          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.iam_role.name}"
         },
         "Action": [
           "s3:GetObject",
           "s3:ListBucket"
         ],
         "Resource": [
-          "arn:aws:s3:::example-bucket",
-          "arn:aws:s3:::example-bucket/*"
+          "arn:aws:s3:::s3-policy-bucket",
+          "arn:aws:s3:::s3-policy-buckett/*"
         ]
       }
     ]
@@ -68,10 +68,10 @@ resource "aws_s3_bucket_policy" "example_bucket_policy" {
 
 # Disassociating Policy from the Role
 resource "aws_iam_role_policy_attachment" "example_detach" {
-  role       = aws_iam_role.example_role.name
+  role       = aws_iam_role.iam_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 
-  depends_on = [aws_instance.example_instance]
+  depends_on = [aws_instance.ec2_instance]
   lifecycle {
     ignore_changes = [policy_arn]
   }
@@ -79,10 +79,10 @@ resource "aws_iam_role_policy_attachment" "example_detach" {
 
 # Removing the Role
 resource "aws_iam_role_policy_attachment" "example_detach_remove" {
-  role       = aws_iam_role.example_role.name
+  role       = aws_iam_role.iam_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 
-  depends_on = [aws_instance.example_instance]
+  depends_on = [aws_instance.ec2_instance]
   lifecycle {
     ignore_changes = [policy_arn]
   }
