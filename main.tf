@@ -28,7 +28,7 @@ resource "aws_iam_instance_profile" "iam_profile" {
 }
 
 resource "aws_instance" "ec2_instance" {
-  ami           = "ami-0492f9e8743eb62eb"
+  ami           = "ami-830c94e3"
   instance_type = "t2.micro"
   
   iam_instance_profile = aws_iam_role.iam_role.name
