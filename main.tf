@@ -1,8 +1,7 @@
 resource "aws_iam_role" "iam_role" {
   name = "iamrole"
 
-  assume_role_policy = <<EOF
-{
+  assume_role_policy = jsonencode({
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -13,8 +12,9 @@ resource "aws_iam_role" "iam_role" {
       "Action": "sts:AssumeRole"
     }
   ]
-}
-EOF
+  })
+  tags = local.common_tags
+
 }
 
 resource "aws_iam_role_policy_attachment" "policy_attachment" {
@@ -28,48 +28,53 @@ resource "aws_iam_instance_profile" "iam_profile" {
 }
 
 resource "aws_instance" "ec2_instance" {
-  ami           = "ami-06ca3ca175f37dd66"
+  ami           = "ami-0492f9e8743eb62eb"
   instance_type = "t2.micro"
   
-  iam_instance_profile = aws_iam_instance_profile.iam_profile.name
+  iam_instance_profile = aws_iam_role.iam_role.name
 
   tags = {
     Name = "ec2instance"
   }
 }
 
-resource "aws_s3_bucket_policy" "s3_bucket_policy" {
-  bucket = "s3-policy-bucket"
+resource "aws_s3_bucket" "example_bucket" {
+  bucket = "ccgc5501-s3-bucket"
 
-  policy = jsonencode({
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Principal": {
-          "AWS": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${aws_iam_role.iam_role.name}"
-        },
-        "Action": [
-          "s3:GetObject",
-          "s3:ListBucket"
-        ],
-        "Resource": [
-          "arn:aws:s3:::s3-policy-bucket",
-          "arn:aws:s3:::s3-policy-buckett/*"
-        ]
-      }
-    ]
-  })
+  # policy = file(~/policy.json)
 }
 
+# resource "aws_s3_bucket_acl" "example_bucket_acl" {
+#   bucket = aws_s3_bucket.example_bucket.id
+#   acl = "private"
+# }
+
+
+resource "aws_iam_policy" "s3_bucket_policy" {
+
+
+  policy = jsonencode({
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "arn:aws:s3:::s3-policy-bucket/*"
+    }
+  ]
+})
+}
+
+
 #aws_s3_bucket_policy.example_bucket_policy
+# "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
 
  data "aws_caller_identity" "current" {}
 
 # Disassociating Policy from the Role
 resource "aws_iam_role_policy_attachment" "example_detach" {
   role       = aws_iam_role.iam_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  policy_arn = aws_iam_policy.s3_bucket_policy.arn
 
   depends_on = [aws_instance.ec2_instance]
   lifecycle {
@@ -80,7 +85,7 @@ resource "aws_iam_role_policy_attachment" "example_detach" {
 # Removing the Role
 resource "aws_iam_role_policy_attachment" "example_detach_remove" {
   role       = aws_iam_role.iam_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+  policy_arn = aws_iam_policy.s3_bucket_policy.arn
 
   depends_on = [aws_instance.ec2_instance]
   lifecycle {
