@@ -1,5 +1,5 @@
 resource "aws_iam_role" "iam_role" {
-  name = "iamrole"
+  name = "iamrole9389"
 
   assume_role_policy = jsonencode({
   "Version": "2012-10-17",
@@ -23,18 +23,18 @@ resource "aws_iam_role_policy_attachment" "policy_attachment" {
 }
 
 resource "aws_iam_instance_profile" "iam_profile" {
-  name = "iam_profile"
+  name = "iam-profile9389"
   role = aws_iam_role.iam_role.name
 }
 
 resource "aws_instance" "ec2_instance" {
   ami           = "ami-830c94e3"
   instance_type = "t2.micro"
-  
-  iam_instance_profile = aws_iam_role.iam_role.name
-
+  #  "ami-0492f9e8743eb62eb" "ami-06ca3ca175f37dd66"
+  iam_instance_profile = aws_iam_instance_profile.iam_profile.name
+  # aws_iam_role.iam_role.name
   tags = {
-    Name = "ec2instance"
+    Name = "ccgc-instance"
   }
 }
 
